@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('nombre');
             $table->text('descripcion');
             $table->integer('capacidad');
-            $table->boolean('disponibilidad')->default(true); // Añadimos el campo disponibilidad
+            $table->boolean('disponibilidad')->default(true);
+            $table->string('imagen')->nullable(); 
             $table->timestamps();
         });
     }

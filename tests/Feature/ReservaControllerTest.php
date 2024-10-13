@@ -46,39 +46,117 @@ class ReservaControllerTest extends TestCase
             ]);
     }
 
-    /**
-     * Test para crear una nueva reserva.
-     */
-    // Verifica que se pueda crear una reserva con éxito, asegurándose de que se almacenen los datos correctos en la base de datos.
     public function testStoreCreatesReservaSuccessfully()
     {
+        // Crea un usuario y un espacio
         $user = User::factory()->create();
-        // Crea un espacio primero para asegurarte de que existe
-        $espacio = Espacio::factory()->create(['id' => 1]); // Asegúrate de que el ID del espacio sea 1
+        $espacio = Espacio::factory()->create(['id' => 1]);
+
+        // Asegúrate de que la fecha y hora sean futuras
+        $futureDate = now()->addDays(1)->format('Y-m-d'); // Un día en el futuro
+        $futureStartTime = now()->addHours(2)->format('H:i'); // Dos horas en el futuro
+        $futureEndTime = now()->addHours(3)->format('H:i'); // Tres horas en el futuro
 
         $this->actingAs($user)
             ->postJson('/api/reservas', [
-                "espacio_id" => $espacio->id, // Usar el espacio creado
-                "fecha" => "2024-10-09",
-                "hora_inicio" => "16:00",
-                "hora_fin" => "17:00"
+                'nombre' => 'nombre de reserva',
+                'espacio_id' => $espacio->id,
+                'fecha' => $futureDate,
+                'hora_inicio' => $futureStartTime,
+                'hora_fin' => $futureEndTime
             ])
             ->assertStatus(201)
             ->assertJson([
+                'nombre' => 'nombre de reserva',
                 'user_id' => $user->id,
+                'espacio_id' => $espacio->id,
+                'fecha' => $futureDate,
+                'hora_inicio' => $futureStartTime,
+                'hora_fin' => $futureEndTime,
+            ]);
+
+        $this->assertDatabaseHas('reservas', [
+            'nombre' => 'nombre de reserva',
+            'user_id' => $user->id,
+            'espacio_id' => $espacio->id,
+            'fecha' => $futureDate,
+            'hora_inicio' => $futureStartTime,
+            'hora_fin' => $futureEndTime,
+        ]);
+    }
+
+    public function testStoreFailsWithoutNombre()
+    {
+        $user = User::factory()->create();
+        $espacio = Espacio::factory()->create(['id' => 1]);
+
+        $this->actingAs($user)
+            ->postJson('/api/reservas', [
                 "espacio_id" => $espacio->id,
                 "fecha" => "2024-10-09",
                 "hora_inicio" => "16:00",
                 "hora_fin" => "17:00"
-            ]);
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['nombre']);
+    }
 
-        $this->assertDatabaseHas('reservas', [
-            'user_id' => $user->id,
+    public function testStoreFailsWithNonExistentEspacio()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/reservas', [
+                'nombre' => 'nombre de reserva',
+                'espacio_id' => 999, // ID que no existe
+                'fecha' => '2024-10-09',
+                'hora_inicio' => '16:00',
+                'hora_fin' => '17:00'
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['espacio_id']);
+    }
+
+    public function testStoreFailsWithPastStartTime()
+    {
+        $user = User::factory()->create();
+        $espacio = Espacio::factory()->create(['id' => 1]);
+
+        $this->actingAs($user)
+            ->postJson('/api/reservas', [
+                'nombre' => 'nombre de reserva',
+                'espacio_id' => $espacio->id,
+                'fecha' => '2024-10-09',
+                'hora_inicio' => '16:00',
+                'hora_fin' => '15:00' // Hora de fin antes de la de inicio
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['hora_fin']);
+    }
+
+    public function testStoreFailsWithOverlappingReservation()
+    {
+        $user = User::factory()->create();
+        $espacio = Espacio::factory()->create(['id' => 1]);
+
+        // Crea una reserva existente que se superpone
+        Reserva::factory()->create([
             'espacio_id' => $espacio->id,
             'fecha' => '2024-10-09',
-            'hora_inicio' => '16:00',
-            'hora_fin' => '17:00',
+            'hora_inicio' => '15:00',
+            'hora_fin' => '17:00'
         ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/reservas', [
+                'nombre' => 'nombre de reserva',
+                'espacio_id' => $espacio->id,
+                'fecha' => '2024-10-09',
+                'hora_inicio' => '16:00',
+                'hora_fin' => '18:00' // Se superpone con la reserva existente
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['hora_inicio']);
     }
 
     /**
@@ -92,6 +170,7 @@ class ReservaControllerTest extends TestCase
 
         $this->actingAs($user)
             ->putJson("/api/reservas/{$reserva->id}", [
+                'nombre' => 'nombre de reserva',
                 "espacio_id" => $reserva->espacio_id,
                 "fecha" => "2024-10-19",
                 "hora_inicio" => "16:00",
@@ -100,6 +179,7 @@ class ReservaControllerTest extends TestCase
             ->assertStatus(200)
             ->assertJson([
                 'id' => $reserva->id,
+                'nombre' => 'nombre de reserva',
                 "espacio_id" => $reserva->espacio_id,
                 "fecha" => "2024-10-19",
                 "hora_inicio" => "16:00",
@@ -108,6 +188,7 @@ class ReservaControllerTest extends TestCase
 
         $this->assertDatabaseHas('reservas', [
             'id' => $reserva->id,
+            'nombre' => 'nombre de reserva',
             "espacio_id" => $reserva->espacio_id,
             "fecha" => "2024-10-19",
             "hora_inicio" => "16:00",

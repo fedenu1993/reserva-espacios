@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  *     @OA\Property(property="nombre", type="string", example="Sala de Conferencias"),
  *     @OA\Property(property="descripcion", type="string", example="Una sala amplia para conferencias."),
  *     @OA\Property(property="capacidad", type="integer", example=50),
+ *     @OA\Property(property="imagen", type="string", example="sala_conferencias.jpg"),
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-01T00:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-01T00:00:00Z")
  * )
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Model;
 class Espacio extends Model
 {
     use HasFactory;
-    protected $fillable = ['nombre', 'descripcion', 'capacidad'];
+    protected $fillable = ['nombre', 'descripcion', 'capacidad', 'imagen'];
 
     public function reservas()
     {

@@ -6,27 +6,29 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
-
 class AuthController extends Controller
 {
+
     /**
      * @OA\Post(
      *     path="/api/login",
      *     tags={"Auth"},
      *     summary="Iniciar sesión de usuario",
+     *     description="Permite a un usuario autenticarse con sus credenciales y recibir un token para acceder a los recursos protegidos.",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
      *             required={"email", "password"},
-     *             @OA\Property(property="email", type="string", format="email", example="usuario@example.com"),
-     *             @OA\Property(property="password", type="string", example="contraseña123")
+     *             @OA\Property(property="email", type="string", format="email", example="admin@example.com"),
+     *             @OA\Property(property="password", type="string", example="password123")
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Inicio de sesión exitoso",
      *         @OA\JsonContent(
-     *             @OA\Property(property="token", type="string", example="token_generado_aqui")
+     *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"),
+     *             @OA\Property(property="user_id", type="integer", example=1)
      *         )
      *     ),
      *     @OA\Response(
@@ -40,7 +42,7 @@ class AuthController extends Controller
      *         response=422,
      *         description="Errores de validación",
      *         @OA\JsonContent(
-     *             @OA\Property(property="errors", type="object")
+     *             @OA\Property(property="errors", type="object", example={"email": {"El campo email es obligatorio."}})
      *         )
      *     ),
      *     @OA\Response(
@@ -55,7 +57,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         try {
-            // Validamos las credenciales recibidas en el request
+            // Validamos las credenciales del request
             $credentials = $request->validate([
                 'email' => 'required|email',
                 'password' => 'required',
@@ -72,8 +74,11 @@ class AuthController extends Controller
             // Creamos un token con Sanctum
             $token = $user->createToken('API Token')->plainTextToken;
 
-            // Retornamos el token
-            return response()->json(['token' => $token]);
+            // Retornamos el token y el ID del usuario
+            return response()->json([
+                'token' => $token,
+                'user_id' => $user->id
+            ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         } catch (\Exception $e) {

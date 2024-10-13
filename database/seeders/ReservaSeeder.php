@@ -29,7 +29,9 @@ class ReservaSeeder extends Seeder
         // Crear algunas reservas
         foreach ($espacios as $espacio) {
             foreach ($usuarios as $usuario) {
+                $nombre = 'Reserva por ' . $usuario->name . ' en ' . $espacio->nombre;
                 Reserva::create([
+                    'nombre' => $nombre,
                     'espacio_id' => $espacio->id,
                     'user_id' => $usuario->id,
                     'fecha' => Carbon::now()->addDays(rand(1, 10)), // Reserva para los próximos 10 días

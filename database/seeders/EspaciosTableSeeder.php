@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use DB;
-
 
 class EspaciosTableSeeder extends Seeder
 {
@@ -14,13 +12,13 @@ class EspaciosTableSeeder extends Seeder
      */
     public function run(): void
     {
-        // Inserta datos de ejemplo en la tabla de espacios
         DB::table('espacios')->insert([
             [
                 'nombre' => 'Sala de Conferencias',
                 'descripcion' => 'Una sala espaciosa para conferencias grandes',
                 'capacidad' => 100,
                 'disponibilidad' => true,
+                'imagen' => 'sala_conferencias.jpg',
                 'created_at' => now(),
                 'updated_at' => now()
             ],
@@ -29,6 +27,7 @@ class EspaciosTableSeeder extends Seeder
                 'descripcion' => 'Auditorio equipado con tecnología de audio y video',
                 'capacidad' => 300,
                 'disponibilidad' => true,
+                'imagen' => 'auditorio.jpg',
                 'created_at' => now(),
                 'updated_at' => now()
             ]

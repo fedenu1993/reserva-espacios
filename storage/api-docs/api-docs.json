@@ -12,6 +12,7 @@
                     "Auth"
                 ],
                 "summary": "Iniciar sesión de usuario",
+                "description": "Permite a un usuario autenticarse con sus credenciales y recibir un token para acceder a los recursos protegidos.",
                 "operationId": "a3b306d14572d1f4bd6c064b3233e7b8",
                 "requestBody": {
                     "required": true,
@@ -26,11 +27,11 @@
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "usuario@example.com"
+                                        "example": "admin@example.com"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "example": "contraseña123"
+                                        "example": "password123"
                                     }
                                 },
                                 "type": "object"
@@ -47,7 +48,11 @@
                                     "properties": {
                                         "token": {
                                             "type": "string",
-                                            "example": "token_generado_aqui"
+                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"
+                                        },
+                                        "user_id": {
+                                            "type": "integer",
+                                            "example": 1
                                         }
                                     },
                                     "type": "object"
@@ -78,7 +83,12 @@
                                 "schema": {
                                     "properties": {
                                         "errors": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "example": {
+                                                "email": [
+                                                    "El campo email es obligatorio."
+                                                ]
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -170,17 +180,92 @@
                     "Espacios"
                 ],
                 "summary": "Obtener todos los espacios",
+                "description": "Este endpoint permite obtener una lista paginada de todos los espacios disponibles. Se pueden aplicar filtros opcionales por nombre, capacidad y fecha.",
                 "operationId": "5b30a51c97d21af853cacca0c49ab978",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Número de elementos por página (default: 10)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de página actual (default: 1)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "nombre",
+                        "in": "query",
+                        "description": "Filtrar espacios por nombre (opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Sala de Conferencias"
+                        }
+                    },
+                    {
+                        "name": "capacidad",
+                        "in": "query",
+                        "description": "Filtrar espacios por capacidad mínima (opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "fecha",
+                        "in": "query",
+                        "description": "Filtrar espacios que no estén reservados en la fecha especificada (opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-10-13"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Lista de espacios",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Espacio"
-                                    }
+                                    "properties": {
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Espacio"
+                                            }
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 100
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -212,7 +297,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "nombre",
@@ -231,6 +316,11 @@
                                     "capacidad": {
                                         "type": "integer",
                                         "example": 50
+                                    },
+                                    "imagen": {
+                                        "description": "Imagen del espacio en formato jpg, png o jpeg",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -245,6 +335,22 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Espacio"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El campo nombre es obligatorio."
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -274,6 +380,7 @@
                     "Espacios"
                 ],
                 "summary": "Obtener un espacio por ID",
+                "description": "Devuelve los detalles de un espacio. La propiedad `imagen` contiene la imagen en formato base64.",
                 "operationId": "e426367fc6788a5cc54af7230faa86ff",
                 "parameters": [
                     {
@@ -288,11 +395,43 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Detalles del espacio",
+                        "description": "Detalles del espacio con la imagen en base64",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Espacio"
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "nombre": {
+                                            "type": "string",
+                                            "example": "Sala de Conferencias"
+                                        },
+                                        "descripcion": {
+                                            "type": "string",
+                                            "example": "Una sala amplia para conferencias."
+                                        },
+                                        "capacidad": {
+                                            "type": "integer",
+                                            "example": 50
+                                        },
+                                        "imagen": {
+                                            "type": "string",
+                                            "example": "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-01-01T00:00:00Z"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-01-01T00:00:00Z"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -351,7 +490,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
                                     "nombre": {
@@ -365,6 +504,11 @@
                                     "capacidad": {
                                         "type": "integer",
                                         "example": 30
+                                    },
+                                    "imagen": {
+                                        "description": "Imagen actualizada del espacio en formato jpg, png o jpeg",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -435,21 +579,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Espacio eliminado correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Espacio eliminado correctamente."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "204": {
+                        "description": "Espacio eliminado exitosamente"
                     },
                     "404": {
                         "description": "Espacio no encontrado",
@@ -492,7 +623,20 @@
                     "Reservas"
                 ],
                 "summary": "Obtener todas las reservas del usuario autenticado",
+                "description": "Este endpoint permite obtener las reservas del usuario autenticado. Opcionalmente, se pueden filtrar las reservas por `espacio_id`.",
                 "operationId": "8536ca90a9f5ba3709643c0493395478",
+                "parameters": [
+                    {
+                        "name": "espacio_id",
+                        "in": "query",
+                        "description": "ID del espacio para filtrar las reservas",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Operación exitosa",
@@ -508,22 +652,67 @@
                         }
                     },
                     "500": {
-                        "description": "Error al obtener reservas"
+                        "description": "Error al obtener reservas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error al obtener reservas: {detalle_error}"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
                     "Reservas"
                 ],
                 "summary": "Crear una nueva reserva",
+                "description": "Permite al usuario autenticado crear una reserva en un espacio disponible.",
                 "operationId": "3b0d25aeb18200cc0887c6cb9d929934",
                 "requestBody": {
+                    "description": "Datos de la nueva reserva",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "Request"
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Evento Corporativo"
+                                    },
+                                    "espacio_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "fecha": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-10-20"
+                                    },
+                                    "hora_inicio": {
+                                        "type": "string",
+                                        "format": "time",
+                                        "example": "14:00"
+                                    },
+                                    "hora_fin": {
+                                        "type": "string",
+                                        "format": "time",
+                                        "example": "18:00"
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
@@ -540,15 +729,63 @@
                         }
                     },
                     "403": {
-                        "description": "No autorizado"
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No autorizado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Error de validación"
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "espacio_id": [
+                                                    "El espacio es obligatorio."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "500": {
-                        "description": "Error al crear la reserva"
+                        "description": "Error al crear la reserva",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error al crear la reserva. {detalle_error}"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/reservas/{id}": {
@@ -590,31 +827,59 @@
                     "Reservas"
                 ],
                 "summary": "Actualizar una reserva existente",
+                "description": "Permite al usuario autenticado actualizar una reserva de su propiedad.",
                 "operationId": "91fe86a4a06c23ace3ffc53de226b866",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID de la reserva",
+                        "description": "ID de la reserva a actualizar",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": 1
                         }
                     }
                 ],
                 "requestBody": {
+                    "description": "Datos actualizados de la reserva",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "Request"
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string",
+                                        "example": "Cumpleaños"
+                                    },
+                                    "espacio_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "fecha": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-10-20"
+                                    },
+                                    "hora_inicio": {
+                                        "type": "string",
+                                        "format": "time",
+                                        "example": "18:00"
+                                    },
+                                    "hora_fin": {
+                                        "type": "string",
+                                        "format": "time",
+                                        "example": "23:00"
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Reserva actualizada",
+                        "description": "Reserva actualizada exitosamente",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -624,15 +889,63 @@
                         }
                     },
                     "403": {
-                        "description": "No autorizado"
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No autorizado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Error de validación"
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "nombre": [
+                                                    "El nombre es obligatorio."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "500": {
-                        "description": "Error al actualizar la reserva"
+                        "description": "Error al actualizar la reserva",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error al actualizar la reserva. {detalle_error}"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -1080,6 +1393,10 @@
                         "type": "integer",
                         "example": 50
                     },
+                    "imagen": {
+                        "type": "string",
+                        "example": "sala_conferencias.jpg"
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
@@ -1103,25 +1420,38 @@
                 ],
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "Fiesta de 15"
                     },
                     "espacio_id": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
                     },
                     "user_id": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
                     },
                     "fecha": {
                         "type": "string",
-                        "format": "date"
+                        "format": "date",
+                        "example": "2024-10-13"
                     },
                     "hora_inicio": {
                         "type": "string",
-                        "format": "time"
+                        "format": "time",
+                        "example": "14:00:00"
                     },
                     "hora_fin": {
                         "type": "string",
-                        "format": "time"
+                        "format": "time",
+                        "example": "18:00:00"
                     },
                     "created_at": {
                         "type": "string",

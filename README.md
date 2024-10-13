@@ -31,22 +31,11 @@ Abre el archivo .env y configura los valores correctos para tu base de datos y o
 4. Generar la clave de la aplicación
    php artisan key:generate
 
-5. Levantar el servidor
+5. Crear el Enlace de Almacenamiento:
+   php artisan storage:link
+
+6. Levantar el servidor
    php artisan serve
-
-<!-- Endpoints disponibles -->
-
-    //Autenticación
-    Registro: POST /api/register
-    Login: POST /api/login
-
-    //Espacios
-    Listar espacios: GET /api/espacios
-    Crear espacio (requiere autenticación): POST /api/espacios
-
-    //Reservas
-    Listar reservas del usuario autenticado: GET /api/reservas
-    Crear reserva: POST /api/reservas
 
 <!-- Autenticación y uso de tokens -->
 

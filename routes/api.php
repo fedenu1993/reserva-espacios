@@ -6,6 +6,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EspacioController;
 use App\Http\Controllers\ReservaController;
+use Illuminate\Support\Facades\Auth;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +23,17 @@ use App\Http\Controllers\ReservaController;
 // Rutas para sessiones
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->get('/login/validate-token', function (Request $request) {
+  // El usuario ya está autenticado gracias al middleware
+  $user = $request->user();
+
+  return response()->json(['valid' => true, 'user' => $user]);
+});
+Route::middleware('auth:sanctum')->get('/login/user', function (Request $request) {
+  // El usuario ya está autenticado gracias al middleware
+  $user = $request->user();
+  return response()->json(['user' => $user]);
+});
 
 // Users
 Route::post('users', [UserController::class, 'store']); // Crear (sin autenticación)
@@ -31,13 +44,11 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::delete('users/{user}', [UserController::class, 'destroy']); // Eliminar
 });
 
-// Rutas para ver espacios (todos los usuarios autenticados)
-// Route::middleware(['auth:sanctum'])->group(function () {
 // Rutas para ver espacios  
-Route::get('espacios', [EspacioController::class, 'index']); // Listar todos los espacios
-Route::get('espacios/{espacio}', [EspacioController::class, 'show']); // Ver un espacio específico
-// });
-
+Route::middleware(['auth:sanctum'])->group(function () {
+  Route::get('espacios', [EspacioController::class, 'index']); // Listar todos los espacios
+  Route::get('espacios/{espacio}', [EspacioController::class, 'show']); // Ver un espacio específico
+});
 // Rutas para agregar, editar y eliminar espacios (solo admin)
 Route::middleware(['auth:sanctum', 'checkRole:admin'])->group(function () {
   Route::post('espacios', [EspacioController::class, 'store']); // Crear un nuevo espacio
