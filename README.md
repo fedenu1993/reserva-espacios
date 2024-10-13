@@ -46,7 +46,9 @@ El servidor te devolverá un token que debes incluir en el encabezado de las pet
 Authorization: Bearer {TOKEN}
 
     //Si ejecutas los seeders podes usar
-    email: test@example.com
+    email: admin@example.com
     password: password
+
+    Para probar vista de admin sino con el email user@example.com
 
     Caso contrario vas a tener que crear un user
